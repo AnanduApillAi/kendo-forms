@@ -1,0 +1,177 @@
+/* Kendo UI Theme Overrides */
+
+/* TabStrip */
+.k-tabstrip-theme .k-tabstrip-items {
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.k-tabstrip-theme .k-tabstrip-items .k-item {
+  color: var(--muted-foreground);
+  background-color: var(--card);
+  border-color: transparent;
+}
+
+.k-tabstrip-theme .k-tabstrip-items .k-item.k-active {
+  color: var(--foreground);
+  background-color: var(--background);
+  border-color: var(--border);
+  border-bottom-color: var(--background);
+}
+.k-animation-container {
+  width: 100%;
+}
+
+.k-tabstrip-theme .k-tabstrip-items .k-item:hover:not(.k-active) {
+  color: var(--foreground);
+  background-color: var(--secondary);
+}
+
+.k-tabstrip-theme .k-tabstrip-content {
+  background-color: var(--background);
+  border-color: var(--border);
+}
+
+/* Dialog */
+.k-dialog-theme .k-dialog-titlebar {
+  background-color: var(--card);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.k-dialog-theme .k-dialog-content {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.k-dialog-theme .k-dialog-buttongroup {
+  background-color: var(--card);
+  border-top: 1px solid var(--border);
+}
+
+.k-dialog-theme .k-dialog-buttongroup .k-button {
+  color: var(--foreground);
+  background-color: var(--secondary);
+  border-color: var(--border);
+}
+
+.k-dialog-theme .k-dialog-buttongroup .k-button:hover {
+  background-color: var(--secondary-hover);
+}
+
+.k-dialog-theme .k-dialog-buttongroup .k-button.k-primary {
+  color: var(--primary-foreground);
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.k-dialog-theme .k-dialog-buttongroup .k-button.k-primary:hover {
+  opacity: 0.9;
+}
+
+/* Input */
+.k-input {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.k-input:focus, .k-input.k-focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--primary-alpha) !important;
+}
+
+.k-input:hover {
+  border-color: var(--border-hover) !important;
+}
+
+/* Dropdown */
+.k-dropdown {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.k-dropdown:focus, .k-dropdown.k-focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--primary-alpha) !important;
+}
+
+.k-dropdown:hover {
+  border-color: var(--border-hover) !important;
+}
+
+.k-dropdown .k-dropdown-wrap {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+.k-list-container {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.k-list .k-item {
+  color: var(--foreground) !important;
+}
+
+.k-list .k-item:hover, .k-list .k-item.k-state-hover {
+  background-color: var(--secondary) !important;
+}
+
+.k-list .k-item.k-state-selected {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+/* Checkbox and Radio */
+.k-checkbox, .k-radio {
+  border-color: var(--border) !important;
+  background-color: var(--background) !important;
+}
+.k-checkbox-wrap{
+  width: 16px;
+}
+.k-window {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.k-checkbox:checked, .k-checkbox.k-checked, .k-radio:checked, .k-radio.k-checked {
+  border-color: var(--primary) !important;
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.k-checkbox-label, .k-radio-label {
+  color: var(--foreground) !important;
+}
+
+/* Notification */
+.k-notification {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.k-notification-success {
+  background-color: var(--success) !important;
+  color: var(--success-foreground) !important;
+}
+
+.k-notification-info {
+  background-color: var(--info) !important;
+  color: var(--info-foreground) !important;
+}
+
+.k-notification-warning {
+  background-color: var(--warning) !important;
+  color: var(--warning-foreground) !important;
+}
+
+.k-notification-error {
+  background-color: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
+} 

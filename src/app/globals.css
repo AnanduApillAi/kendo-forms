@@ -1,26 +1,267 @@
 @import "tailwindcss";
 
 :root {
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-alpha: rgba(59, 130, 246, 0.2);
+  
+  --secondary: #f3f4f6;
+  --secondary-hover: #e5e7eb;
+  --secondary-foreground: #1f2937;
+  
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-foreground: #ffffff;
+  
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1f2937;
+  
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+  
+  --input: #e5e7eb;
+  
+  --ring: rgba(59, 130, 246, 0.5);
+  
+  --radius: 0.5rem;
+  
+  --header-bg: #ffffff;
+  --header-border: #e5e7eb;
+  
+  --sidebar-bg: #f9fafb;
+  --sidebar-border: #e5e7eb;
+  
+  --canvas-bg: #f3f4f6;
+  --component-bg: #ffffff;
+  --component-border: #e5e7eb;
+  --component-border-hover: #d1d5db;
+  --component-border-selected: #3b82f6;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+  
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-foreground: #ffffff;
+  --primary-alpha: rgba(59, 130, 246, 0.2);
+  
+  --secondary: #374151;
+  --secondary-hover: #4b5563;
+  --secondary-foreground: #f9fafb;
+  
+  --accent: #8b5cf6;
+  --accent-hover: #a78bfa;
+  --accent-foreground: #ffffff;
+  
+  --background: #111827;
+  --foreground: #f9fafb;
+  
+  --card: #1f2937;
+  --card-foreground: #f9fafb;
+  
+  --border: #374151;
+  --border-hover: #4b5563;
+  
+  --input: #374151;
+  
+  --ring: rgba(59, 130, 246, 0.5);
+  
+  --header-bg: #1f2937;
+  --header-border: #374151;
+  
+  --sidebar-bg: #111827;
+  --sidebar-border: #374151;
+  
+  --canvas-bg: #0f172a;
+  --component-bg: #1f2937;
+  --component-border: #374151;
+  --component-border-hover: #4b5563;
+  --component-border-selected: #3b82f6;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  
+  --muted: #374151;
+  --muted-foreground: #9ca3af;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+  
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, Arial, sans-serif);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Kendo UI theme overrides */
+.k-button {
+  border-radius: var(--radius) !important;
+  transition: all 0.2s ease !important;
+}
+
+.k-button-solid-primary {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.k-button-solid-primary:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+.k-button-solid-base {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+.k-button-solid-base:hover {
+  background-color: var(--secondary-hover) !important;
+}
+
+.k-button-solid-error {
+  background-color: #ef4444 !important;
+  color: white !important;
+}
+
+.k-button-solid-error:hover {
+  background-color: #dc2626 !important;
+}
+
+.k-dialog {
+  border-radius: var(--radius) !important;
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.k-dialog-titlebar {
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+.k-input {
+  border-radius: var(--radius) !important;
+  border-color: var(--input) !important;
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+}
+
+.k-dropdown {
+  border-radius: var(--radius) !important;
+  border-color: var(--input) !important;
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+}
+
+.k-tabstrip {
+  border-color: var(--border) !important;
+}
+
+.k-tabstrip-items {
+  background-color: var(--card) !important;
+}
+
+.k-tabstrip-item.k-active {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.k-notification-container {
+  z-index: 9999 !important;
+}
+
+.k-notification {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Custom component styles */
+.form-builder-container {
+  background-color: var(--background);
+}
+
+.component-panel {
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+}
+
+.form-canvas {
+  background-color: var(--canvas-bg) !important;
+}
+
+.preview-export-panel {
+  background-color: var(--sidebar-bg) !important;
+  border-left: 1px solid var(--sidebar-border) !important;
+}
+
+.component-item {
+  background-color: var(--component-bg);
+  border: 1px solid var(--component-border);
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.component-item:hover {
+  border-color: var(--component-border-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.component-item.selected {
+  border-color: var(--component-border-selected);
+  box-shadow: var(--shadow-md);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 155, 155, 0.5);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(155, 155, 155, 0.7);
 }

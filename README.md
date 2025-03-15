@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KendoReact Form Builder
+
+An interactive Form Builder application built with Next.js and KendoReact components. This application provides a seamless and user-friendly experience for creating customizable forms with a drag-and-drop interface.
+
+## Features
+
+- **Component Selection Panel**: Select from various form components like text fields, email inputs, checkboxes, radio buttons, dropdowns, and more.
+- **Form Canvas**: Drag and drop components to arrange them in your form. Edit or delete components as needed.
+- **Customization Modal**: Customize component properties such as labels, placeholders, styles, and validation rules.
+- **Live Preview**: See a real-time preview of your form as you build it.
+- **Export Options**: Export your form as JSON schema or JSX code for easy integration into your projects.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18.0 or later
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/kendo-form-builder.git
+cd kendo-form-builder
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Start the development server:
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Adding Components**: Click on a component in the left panel to add it to your form.
+2. **Arranging Components**: Drag and drop components in the form canvas to rearrange them.
+3. **Customizing Components**: Click the "Edit" button on a component to open the customization modal.
+4. **Previewing the Form**: View the live preview in the right panel.
+5. **Exporting the Form**: Choose between JSON or JSX format and copy or download the code.
 
-## Learn More
+## Technologies Used
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js**: React framework for server-rendered applications
+- **KendoReact**: UI component library for React applications
+- **TypeScript**: For type safety and better developer experience
+- **react-beautiful-dnd**: For drag-and-drop functionality
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Deploy on Vercel
+## Acknowledgments
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- KendoReact for providing the UI components
+- Next.js team for the amazing React framework
