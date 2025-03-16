@@ -2,14 +2,15 @@
 
 import React from 'react';
 import { useTheme } from './ThemeProvider';
+import { Button } from '@progress/kendo-react-buttons';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <button
+    <Button
       onClick={toggleTheme}
-      className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary hover:bg-secondary-hover transition-colors duration-200"
+      className="flex items-center  justify-center w-10 h-10 rounded-full bg-secondary hover:bg-secondary-hover transition-colors duration-200"
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? (
@@ -47,6 +48,6 @@ export function ThemeToggle() {
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
         </svg>
       )}
-    </button>
+    </Button>
   );
 } 

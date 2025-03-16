@@ -24,13 +24,6 @@ export interface FormComponentProps {
   placeholder?: string;
   required?: boolean;
   options?: { label: string; value: string }[];
-  width?: string;
-  height?: string;
-  borderStyle?: string;
-  borderColor?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  fontSize?: string;
   inline?: boolean;
   showLabel?: boolean;
 }
@@ -47,6 +40,7 @@ interface FormBuilderContextType {
   setSelectedComponentId: (id: string | null) => void;
   exportAsJson: () => string;
   exportAsJsx: () => string;
+  setComponents: (components: FormComponentProps[][]) => void;
 }
 
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
@@ -206,25 +200,26 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     return jsx;
   };
 
-  const value = useMemo(
-    () => ({
-      components,
-      addComponent,
-      addInlineComponent,
-      updateComponent,
-      removeComponent,
-      reorderComponents,
-      reorderInlineComponents,
-      selectedComponentId,
-      setSelectedComponentId,
-      exportAsJson,
-      exportAsJsx,
-    }),
-    [components, selectedComponentId]
-  );
-
   return (
-    <FormBuilderContext.Provider value={value}>
+    <FormBuilderContext.Provider
+      value={useMemo(
+        () => ({
+          components,
+          addComponent,
+          addInlineComponent,
+          updateComponent,
+          removeComponent,
+          reorderComponents,
+          reorderInlineComponents,
+          selectedComponentId,
+          setSelectedComponentId,
+          exportAsJson,
+          exportAsJsx,
+          setComponents,
+        }),
+        [components, selectedComponentId]
+      )}
+    >
       {children}
     </FormBuilderContext.Provider>
   );

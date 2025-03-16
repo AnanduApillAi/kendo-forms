@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Dialog } from '@progress/kendo-react-dialogs';
-import { Button } from '@progress/kendo-react-buttons';
 import { v4 as uuidv4 } from 'uuid';
 import { FormComponentType } from './FormBuilderContext';
 
@@ -15,12 +14,14 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
   const componentOptions = [
     {
       type: 'textField' as FormComponentType,
+      componentName: 'Text Field',
       label: 'Text Field',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <line x1="21" y1="6" x2="3" y2="6"></line>
-          <line x1="15" y1="12" x2="3" y2="12"></line>
-          <line x1="17" y1="18" x2="3" y2="18"></line>
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <line x1="7" y1="9" x2="17" y2="9" />
+          <line x1="7" y1="13" x2="17" y2="13" />
+          <line x1="7" y1="17" x2="13" y2="17" />
         </svg>
       ),
       defaultProps: {
@@ -33,11 +34,12 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
     },
     {
       type: 'email' as FormComponentType,
+      componentName: 'Email Field',
       label: 'Email',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-          <polyline points="22,6 12,13 2,6"></polyline>
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
         </svg>
       ),
       defaultProps: {
@@ -50,11 +52,13 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
     },
     {
       type: 'number' as FormComponentType,
+      componentName: 'Number Field',
       label: 'Number',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <line x1="12" y1="1" x2="12" y2="23"></line>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M9 12h6" />
+          <path d="M12 9v6" />
         </svg>
       ),
       defaultProps: {
@@ -67,11 +71,12 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
     },
     {
       type: 'checkbox' as FormComponentType,
+      componentName: 'Checkbox',
       label: 'Checkbox',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <polyline points="9 11 12 14 22 4"></polyline>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="m9 12 2 2 4-4" />
         </svg>
       ),
       defaultProps: {
@@ -83,11 +88,14 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
     },
     {
       type: 'radio' as FormComponentType,
+      componentName: 'Radio Group',
       label: 'Radio Group',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <circle cx="12" cy="12" r="3"></circle>
+          <circle cx="12" cy="6" r="4" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="12" cy="18" r="4" />
+          <circle cx="6" cy="12" r="1" fill="currentColor" />
         </svg>
       ),
       defaultProps: {
@@ -104,10 +112,12 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
     },
     {
       type: 'dropdown' as FormComponentType,
+      componentName: 'Dropdown',
       label: 'Dropdown',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <path d="M6 9l6 6 6-6"/>
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="m8 10 4 4 4-4" />
         </svg>
       ),
       defaultProps: {
@@ -124,13 +134,14 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
     },
     {
       type: 'textarea' as FormComponentType,
+      componentName: 'Text Area',
       label: 'Text Area',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="8" y1="8" x2="16" y2="8"></line>
-          <line x1="8" y1="12" x2="16" y2="12"></line>
-          <line x1="8" y1="16" x2="12" y2="16"></line>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M7 7h10" />
+          <path d="M7 11h10" />
+          <path d="M7 15h6" />
         </svg>
       ),
       defaultProps: {
@@ -148,6 +159,7 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
     onSelect({
       id: uuidv4(),
       type: option.type,
+      componentName: option.componentName,
       label: option.label,
       ...option.defaultProps,
     });
@@ -165,9 +177,9 @@ const InlineComponentModal: React.FC<InlineComponentModalProps> = ({ onClose, on
           <div
             key={option.type}
             onClick={() => handleSelect(option)}
-            className="flex items-center gap-3 p-3 cursor-pointer hover:bg-[var(--secondary)] transition-colors duration-200 rounded-md border border-[var(--border)]"
+            className="flex items-center gap-3 p-3 cursor-pointer hover:bg-[var(--secondary)] transition-colors duration-200 rounded-lg border border-[var(--border)] shadow-sm hover:shadow"
           >
-            <div className="flex-shrink-0 w-8 h-8 rounded-md bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] flex items-center justify-center">
+            <div className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center">
               {option.icon}
             </div>
             <span className="font-medium text-[var(--foreground)]">{option.label}</span>
