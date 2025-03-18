@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
-
+import { v4 as uuidv4 } from 'uuid';
 // Define types for form components
 export type FormComponentType = 
   | 'textField' 
@@ -32,6 +32,8 @@ interface FormBuilderContextType {
   components: FormComponentProps[][];
   addComponent: (component: FormComponentProps) => void;
   addInlineComponent: (component: FormComponentProps, rowIndex: number) => void;
+  moveFormItem: (sourceIndex: number, destinationIndex: number) => void;
+  addFormItemAtPosition: (componentType: string, index: number) => void;
   updateComponent: (id: string, updates: Partial<FormComponentProps>) => void;
   removeComponent: (id: string) => void;
   reorderComponents: (startIndex: number, endIndex: number) => void;
@@ -64,6 +66,109 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
           width: `${100 / newComponents[rowIndex].length}%`
         }));
       }
+      return newComponents;
+    });
+  };
+
+  const moveFormItem = (sourceIndex: number, destinationIndex: number) => {
+    const newItems = Array.from(components);
+    const [removed] = newItems.splice(sourceIndex, 1);
+    newItems.splice(destinationIndex, 0, removed);
+    setComponents(newItems);
+  };
+
+  const addFormItemAtPosition = (componentType: string, index: number) => {
+    // Find the component option based on its type
+    const defaultProps: Record<string, any> = {
+      textField: {
+        label: 'Text Field',
+        name: 'textField',
+        className: 'form-control',
+        placeholder: 'Enter text...',
+        required: false,
+        width: '100%',
+      },
+      email: {
+        label: 'Email',
+        name: 'email',
+        className: 'form-control',
+        placeholder: 'Enter email...',
+        required: false,
+        width: '100%',
+      },
+      number: {
+        label: 'Number',
+        name: 'number',
+        className: 'form-control',
+        placeholder: 'Enter number...',
+        required: false,
+        width: '100%',
+      },
+      checkbox: {
+        label: 'Checkbox',
+        name: 'checkbox',
+        className: 'form-check',
+        required: false,
+      },
+      radio: {
+        label: 'Radio Group',
+        name: 'radioGroup',
+        className: 'form-check-group',
+        required: false,
+        options: [
+          { label: 'Option 1', value: 'option1' },
+          { label: 'Option 2', value: 'option2' },
+          { label: 'Option 3', value: 'option3' },
+        ],
+      },
+      dropdown: {
+        label: 'Dropdown',
+        name: 'dropdown',
+        className: 'form-select',
+        required: false,
+        options: [
+          { label: 'Option 1', value: 'option1' },
+          { label: 'Option 2', value: 'option2' },
+          { label: 'Option 3', value: 'option3' },
+        ],
+        width: '100%',
+      },
+      textarea: {
+        label: 'Text Area',
+        name: 'textarea',
+        className: 'form-control',
+        placeholder: 'Enter text...',
+        required: false,
+        width: '100%',
+        height: '100px',
+      }
+    };
+
+    // Create the componentName map
+    const componentNameMap: Record<string, componentName> = {
+      textField: 'Text Field',
+      email: 'Email Field',
+      number: 'Number Field',
+      checkbox: 'Checkbox',
+      radio: 'Radio Button',
+      dropdown: 'Dropdown',
+      textarea: 'Textarea',
+    };
+
+    // Create a new component
+    const newComponent: FormComponentProps = {
+      id: uuidv4(),
+      type: componentType as FormComponentType,
+      componentName: componentNameMap[componentType] as componentName,
+      label: defaultProps[componentType]?.label || 'New Component',
+      ...defaultProps[componentType],
+    };
+
+    // Add the component at the specified position
+    setComponents((prev) => {
+      const newComponents = [...prev];
+      // Insert as a new row
+      newComponents.splice(index, 0, [newComponent]);
       return newComponents;
     });
   };
@@ -209,6 +314,8 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
           addInlineComponent,
           updateComponent,
           removeComponent,
+          moveFormItem,
+          addFormItemAtPosition,
           reorderComponents,
           reorderInlineComponents,
           selectedComponentId,

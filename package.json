@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@hello-pangea/dnd": "^18.0.1",
     "@progress/kendo-drawing": "^1.21.2",
     "@progress/kendo-inputs-common": "^3.1.1",
     "@progress/kendo-intl": "^3.1.2",
@@ -31,11 +33,12 @@
     "@progress/kendo-react-treeview": "^10.0.0",
     "@progress/kendo-svg-icons": "^4.0.0",
     "@progress/kendo-theme-default": "^10.3.1",
+    "install": "^0.13.0",
     "lucide-react": "^0.482.0",
     "next": "15.2.2",
+    "npm": "^11.2.0",
     "openai": "^4.87.3",
     "react": "^19.0.0",
-    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^19.0.0",
     "react-transition-group": "^4.4.5",
     "uuid": "^11.1.0"
