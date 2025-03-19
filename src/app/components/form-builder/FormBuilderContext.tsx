@@ -14,6 +14,13 @@ export type FormComponentType =
 
 export type componentName = 'Text Field' | 'Email Field' | 'Number Field' | 'Checkbox' | 'Radio Button' | 'Dropdown' | 'Textarea';
 
+export interface ChatMessage {
+  id: string;
+  prompt: string;
+  timestamp: Date;
+  result?: boolean; // Whether the prompt was successfully processed
+}
+
 export interface FormComponentProps {
   id: string;
   type: FormComponentType;
@@ -43,6 +50,10 @@ interface FormBuilderContextType {
   exportAsJson: () => string;
   exportAsJsx: () => string;
   setComponents: (components: FormComponentProps[][]) => void;
+  chatHistory: ChatMessage[];
+  addChatMessage: (prompt: string, result: boolean) => void;
+  clearChatHistory: () => void;
+  hasChatHistory: boolean;
 }
 
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
@@ -50,6 +61,7 @@ const FormBuilderContext = createContext<FormBuilderContextType | undefined>(und
 export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [components, setComponents] = useState<FormComponentProps[][]>([]);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   const addComponent = (component: FormComponentProps) => {
     setComponents((prev) => [...prev, [component]]);
@@ -305,6 +317,22 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     return jsx;
   };
 
+  const addChatMessage = (prompt: string, result: boolean) => {
+    const newMessage: ChatMessage = {
+      id: uuidv4(),
+      prompt,
+      timestamp: new Date(),
+      result,
+    };
+    setChatHistory((prev) => [...prev, newMessage]);
+  };
+
+  const clearChatHistory = () => {
+    setChatHistory([]);
+  };
+
+  const hasChatHistory = chatHistory.length > 0;
+
   return (
     <FormBuilderContext.Provider
       value={useMemo(
@@ -323,8 +351,12 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
           exportAsJson,
           exportAsJsx,
           setComponents,
+          chatHistory,
+          addChatMessage,
+          clearChatHistory,
+          hasChatHistory,
         }),
-        [components, selectedComponentId]
+        [components, selectedComponentId, chatHistory]
       )}
     >
       {children}

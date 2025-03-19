@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { prompt } = body;
+    let { prompt, mode, existingForm } = body;
 
     if (!prompt || prompt.trim() === '') {
       return NextResponse.json(
@@ -65,7 +65,8 @@ export async function POST(request: Request) {
     }
 
     // System prompt with available components and format instructions
-    const systemPrompt = `
+    // Define base system prompt with common instructions
+    const baseSystemPrompt = `
 You are a form builder assistant. Your task is to create a form structure based on the user's description.
 Available form components:
 - textField: For single-line text input
@@ -103,6 +104,25 @@ Example response structure:
 ]
 `;
 
+    // Create mode system prompt
+    const createSystemPrompt = `${baseSystemPrompt}
+You must create a new form from scratch based on the user's prompt.
+`;
+
+    // Update mode system prompt
+    const updateSystemPrompt = `${baseSystemPrompt}
+You must update the existing form with new components as per user prompt.
+Follow the existing form structure and add new components as requested.
+Only remove existing components if the user prompt explicitly says to do so.
+`;
+
+    // Select the appropriate system prompt based on mode
+    const systemPrompt = mode === "create" ? createSystemPrompt : updateSystemPrompt;
+
+    if(mode === "update"){
+      prompt = `existing components are ${JSON.stringify(existingForm)} the prompt is ${prompt}`;
+    }
+
     try {
       // Call OpenAI API
       const response = await openai.chat.completions.create({
@@ -124,7 +144,7 @@ Example response structure:
       
       try {
         const formStructure = JSON.parse(aiResponse);
-        
+        console.log(formStructure);
         // Validate the structure is an array of arrays
         if (!Array.isArray(formStructure) || 
             formStructure.some(row => !Array.isArray(row))) {
@@ -132,7 +152,7 @@ Example response structure:
         }
         if(formStructure.length === 0){
           return NextResponse.json(
-            { error: 'Failed to generate form with AI. Please try again with a different promptt.' },
+            { error: 'Failed to generate form with AI. Please try again with a different prompt.' },
             { status: 422 }
           );
         }

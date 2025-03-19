@@ -6,6 +6,7 @@ import { useFormBuilder, FormComponentType, componentName } from './FormBuilderC
 import { v4 as uuidv4 } from 'uuid';
 import AIPromptInput from './AIPromptInput';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
+import AIChatHistory from './AIChatHistory';
 
 interface ComponentOption {
   type: FormComponentType;
@@ -16,8 +17,10 @@ interface ComponentOption {
 }
 
 const ComponentSelectionPanel: React.FC = () => {
-  const { addComponent } = useFormBuilder();
+  const { addComponent, addChatMessage, setComponents } = useFormBuilder();
   const [showAIPrompt, setShowAIPrompt] = useState(false);
+  const [showChatHistory, setShowChatHistory] = useState(false);
+  const [isAIPromptSubmitting, setIsAIPromptSubmitting] = useState(false);
 
   const componentOptions: ComponentOption[] = [
     {
@@ -184,6 +187,42 @@ const ComponentSelectionPanel: React.FC = () => {
     e.dataTransfer.effectAllowed = 'copy';
   };
 
+  const handleFollowupPrompt = async (prompt: string) => {
+    
+    setIsAIPromptSubmitting(true);
+    
+    try {
+      // Call the API endpoint
+      const response = await fetch('/api/ai-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Record failure in chat history
+        addChatMessage(prompt, false);
+        return;
+      }
+
+      // Update the form components with the response
+      setComponents(data);
+      
+      // Record success in chat history
+      addChatMessage(prompt, true);
+    } catch (error) {
+      console.error('Error generating form:', error);
+      // Record failure in chat history
+      addChatMessage(prompt, false);
+    } finally {
+      setIsAIPromptSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-4 h-full overflow-y-auto bg-[var(--card)] border-r border-[var(--border)]">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -219,10 +258,22 @@ const ComponentSelectionPanel: React.FC = () => {
       {/* AI Prompt Modal */}
       {showAIPrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="w-full max-w-md">
-            <AIPromptInput onClose={() => setShowAIPrompt(false)} />
+          <div className="w-full max-w-xl">
+            <AIPromptInput 
+              onClose={() => setShowAIPrompt(false)} 
+              onShowChatHistory={() => setShowChatHistory(true)}
+            />
           </div>
         </div>
+      )}
+
+      {/* AI Chat History Panel */}
+      {showChatHistory && (
+        <AIChatHistory 
+          onClose={() => setShowChatHistory(false)}
+          onSubmitPrompt={handleFollowupPrompt}
+          isSubmitting={isAIPromptSubmitting}
+        />
       )}
 
       <Droppable droppableId="component-panel" type="COMPONENT_ITEMS" isDropDisabled={true}>
@@ -237,9 +288,6 @@ const ComponentSelectionPanel: React.FC = () => {
                 key={option.type}
                 draggableId={option.type}
                 index={index}
-
-
-
               >
                 {(provided, snapshot) => {
                   // Create a clone that stays in place while dragging
