@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@progress/kendo-react-buttons';
 import { TextArea } from '@progress/kendo-react-inputs';
-import { useFormBuilder, ChatMessage } from './FormBuilderContext';
-import { ChevronUp, ChevronDown, X, MessageSquare, Send } from 'lucide-react';
+import { useFormBuilder, ChatMessage, FormComponentProps } from './FormBuilderContext';
+import { ChevronUp, ChevronDown, X, MessageSquare, Send, History } from 'lucide-react';
+import { Notification, NotificationGroup } from '@progress/kendo-react-notification';
 
 interface AIChatHistoryProps {
   onClose: () => void;
@@ -17,9 +18,11 @@ const AIChatHistory: React.FC<AIChatHistoryProps> = ({
   onSubmitPrompt,
   isSubmitting
 }) => {
-  const { chatHistory } = useFormBuilder();
+  const { chatHistory, restoreFormState, components } = useFormBuilder();
   const [isExpanded, setIsExpanded] = useState(true);
   const [newPrompt, setNewPrompt] = useState('');
+  const [restoredMessageId, setRestoredMessageId] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'info' | 'warning' | 'error', message: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   
   const toggleExpanded = () => {
@@ -51,6 +54,43 @@ const AIChatHistory: React.FC<AIChatHistoryProps> = ({
     }).format(new Date(date));
   };
 
+  // Function to check if the current form state matches a message's form state
+  const isCurrentState = (messageFormState: FormComponentProps[][]) => {
+    // Fast comparison - check if the serialized states match
+    return JSON.stringify(components) === JSON.stringify(messageFormState);
+  };
+
+  // Handle form restore
+  const handleRestoreForm = (messageId: string) => {
+    restoreFormState(messageId);
+    setRestoredMessageId(messageId);
+    setNotification({
+      type: 'success',
+      message: 'Form state restored successfully'
+    });
+    
+    // Clear notification after 3 seconds
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  };
+
+  // Get a list of messages that have valid form states to restore to
+  // These will be messages with successful AI responses (result = true and formState exists)
+  const restorableMessages = chatHistory.filter(message => 
+    message.result === true && !!message.formState
+  );
+
+  // Clear the highlighted restored message when a new message is added
+  useEffect(() => {
+    if (chatHistory.length > 0 && restoredMessageId) {
+      const lastMessage = chatHistory[chatHistory.length - 1];
+      if (lastMessage.id !== restoredMessageId) {
+        setRestoredMessageId(null);
+      }
+    }
+  }, [chatHistory, restoredMessageId]);
+
   return (
     <div className="fixed bottom-0 right-6 w-80 bg-[var(--card)] border border-[var(--border)] rounded-t-lg shadow-lg z-50 overflow-hidden transition-all duration-300 ease-in-out"
          style={{ height: isExpanded ? '400px' : '48px', maxHeight: '50vh' }}
@@ -62,21 +102,30 @@ const AIChatHistory: React.FC<AIChatHistoryProps> = ({
         <div className="flex items-center gap-2">
           <MessageSquare size={18} />
           <h3 className="font-medium">AI Chat History</h3>
+          {restorableMessages.length > 0 && (
+            <span className="text-xs bg-[var(--accent)] text-[var(--accent-foreground)] px-2 py-0.5 rounded-full">
+              {restorableMessages.length} {restorableMessages.length === 1 ? 'version' : 'versions'}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {isExpanded ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="p-1 rounded-full hover:bg-[var(--primary-dark)] transition-colors"
-            style={{ background: 'transparent', border: 'none' }}
-          >
-            <X size={16} color="white" />
-          </Button>
+          
         </div>
       </div>
+      
+      {/* Notification area */}
+      {notification && (
+        <NotificationGroup style={{ position: 'absolute', top: '50px', right: '10px', zIndex: 999 }}>
+          <Notification
+            type={{ style: notification.type, icon: true }}
+            closable={true}
+            onClose={() => setNotification(null)}
+          >
+            <span>{notification.message}</span>
+          </Notification>
+        </NotificationGroup>
+      )}
       
       {/* Chat History */}
       {isExpanded && (
@@ -89,25 +138,58 @@ const AIChatHistory: React.FC<AIChatHistoryProps> = ({
               </div>
             ) : (
               <div className="space-y-4">
-                {chatHistory.map((message, index) => (
-                  <div key={message.id} className="flex flex-col">
-                    <div className="flex items-start gap-2 mb-1">
-                      <div className="bg-[var(--primary-light)] text-[var(--primary)] p-2 rounded-lg text-sm max-w-[90%]">
-                        <p>{message.prompt}</p>
+                {chatHistory.map((message, index) => {
+                  // Check if this is not the first message and the previous message had a successful result
+                  const canRestore = message.result && !!message.formState;
+                  const isFirst = index === 0 && message.result;
+                  const isCurrent = canRestore && message.formState && isCurrentState(message.formState);
+                  
+                  return (
+                    <div 
+                      key={message.id} 
+                      className={`flex flex-col p-2 rounded-lg ${restoredMessageId === message.id ? 'bg-[var(--primary-light)] bg-opacity-20' : ''}`}
+                    >
+                      <div className="flex items-start gap-2 mb-1">
+                        <div className="bg-[var(--primary-light)] text-[var(--primary)] p-2 rounded-lg text-sm max-w-[80%]">
+                          <p>{message.prompt}</p>
+                        </div>
+                        
+                        {/* Show restore button for all messages with a form state */}
+                        {canRestore && (
+                          <Button
+                            onClick={() => handleRestoreForm(message.id)}
+                            className="p-1 rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)]"
+                            style={{ 
+                              minWidth: 'unset', 
+                              width: '32px', 
+                              height: '32px',
+                              opacity: isCurrent ? 0.5 : 1 
+                            }}
+                            disabled={isCurrent}
+                            title={isCurrent ? "Current form state" : "Restore this form state"}
+                          >
+                            <History size={16} />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs text-[var(--muted-foreground)]">
+                          {formatTimestamp(message.timestamp)}
+                        </div>
+                        <div className="text-xs">
+                          {message.result ? (
+                            <span className="text-[var(--success)]">✓ Form updated</span>
+                          ) : (
+                            <span className="text-[var(--destructive)]">✗ Failed to process</span>
+                          )}
+                          {isCurrent && (
+                            <span className="ml-2 text-[var(--primary)]">• Current</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="self-end text-xs text-[var(--muted-foreground)]">
-                      {formatTimestamp(message.timestamp)}
-                    </div>
-                    <div className="text-xs text-[var(--muted-foreground)] self-start">
-                      {message.result ? (
-                        <span className="text-[var(--success)]">✓ Form updated</span>
-                      ) : (
-                        <span className="text-[var(--destructive)]">✗ Failed to process</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={bottomRef} />
               </div>
             )}

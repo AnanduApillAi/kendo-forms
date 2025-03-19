@@ -59,12 +59,17 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ onClose, onShowChatHistor
         addChatMessage(prompt, false);
         return;
       }
+      // if(JSON.stringify(data)==JSON.stringify(components)){
+      //   addChatMessage(prompt, false);
+      //   return;
+      // }
 
-      // Update the form components with the response
-      setComponents(data);
+      // Add successful prompt to chat history with AI response data
+      // This must happen before updating the components to ensure we store the raw AI response
+      addChatMessage(prompt, true, data);
       
-      // Add successful prompt to chat history
-      addChatMessage(prompt, true);
+      // Then update the form components with the response
+      setComponents(data);
 
       // Show chat history panel if this is the first successful prompt
       if (onShowChatHistory) {

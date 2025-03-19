@@ -113,6 +113,7 @@ You must create a new form from scratch based on the user's prompt.
     const updateSystemPrompt = `${baseSystemPrompt}
 You must update the existing form with new components as per user prompt.
 Follow the existing form structure and add new components as requested.
+Never response with the same form structure and components as the existing form make some changes, if user ask to keep the same form just return the same form then change any of the names or labels.
 Only remove existing components if the user prompt explicitly says to do so.
 `;
 
@@ -126,7 +127,7 @@ Only remove existing components if the user prompt explicitly says to do so.
     try {
       // Call OpenAI API
       const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-3.5-turbo-0125",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: prompt }

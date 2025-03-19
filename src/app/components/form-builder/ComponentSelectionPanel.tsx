@@ -17,7 +17,7 @@ interface ComponentOption {
 }
 
 const ComponentSelectionPanel: React.FC = () => {
-  const { addComponent, addChatMessage, setComponents } = useFormBuilder();
+  const { addComponent, addChatMessage, setComponents, components } = useFormBuilder();
   const [showAIPrompt, setShowAIPrompt] = useState(false);
   const [showChatHistory, setShowChatHistory] = useState(false);
   const [isAIPromptSubmitting, setIsAIPromptSubmitting] = useState(false);
@@ -198,7 +198,11 @@ const ComponentSelectionPanel: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt, 
+          mode: 'update',
+          existingForm: components
+        }),
       });
 
       const data = await response.json();
@@ -208,12 +212,17 @@ const ComponentSelectionPanel: React.FC = () => {
         addChatMessage(prompt, false);
         return;
       }
+      // if(JSON.stringify(data)==JSON.stringify(components)){
+      //   console.log('ai response is the same as the existing form, try another prompt');
+      //   addChatMessage(prompt, false);
+      //   return;
+      // }
 
       // Update the form components with the response
       setComponents(data);
       
       // Record success in chat history
-      addChatMessage(prompt, true);
+      addChatMessage(prompt, true, data);
     } catch (error) {
       console.error('Error generating form:', error);
       // Record failure in chat history

@@ -19,6 +19,7 @@ export interface ChatMessage {
   prompt: string;
   timestamp: Date;
   result?: boolean; // Whether the prompt was successfully processed
+  formState?: FormComponentProps[][]; // Snapshot of form state
 }
 
 export interface FormComponentProps {
@@ -51,9 +52,10 @@ interface FormBuilderContextType {
   exportAsJsx: () => string;
   setComponents: (components: FormComponentProps[][]) => void;
   chatHistory: ChatMessage[];
-  addChatMessage: (prompt: string, result: boolean) => void;
+  addChatMessage: (prompt: string, result: boolean, aiResponseData?: FormComponentProps[][]) => void;
   clearChatHistory: () => void;
   hasChatHistory: boolean;
+  restoreFormState: (messageId: string) => void; // New function to restore form state
 }
 
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
@@ -317,12 +319,13 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     return jsx;
   };
 
-  const addChatMessage = (prompt: string, result: boolean) => {
+  const addChatMessage = (prompt: string, result: boolean, aiResponseData?: FormComponentProps[][]) => {
     const newMessage: ChatMessage = {
       id: uuidv4(),
       prompt,
       timestamp: new Date(),
       result,
+      formState: aiResponseData || (result ? [...components] : undefined),
     };
     setChatHistory((prev) => [...prev, newMessage]);
   };
@@ -332,6 +335,13 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   const hasChatHistory = chatHistory.length > 0;
+
+  const restoreFormState = (messageId: string) => {
+    const message = chatHistory.find(msg => msg.id === messageId);
+    if (message?.formState) {
+      setComponents(message.formState);
+    }
+  };
 
   return (
     <FormBuilderContext.Provider
@@ -355,6 +365,7 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
           addChatMessage,
           clearChatHistory,
           hasChatHistory,
+          restoreFormState,
         }),
         [components, selectedComponentId, chatHistory]
       )}
