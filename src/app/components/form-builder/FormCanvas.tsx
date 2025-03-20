@@ -6,10 +6,11 @@ import { Button } from '@progress/kendo-react-buttons';
 import { v4 as uuidv4 } from 'uuid';
 import InlineComponentModal from './InlineComponentModal';
 import CustomizationModal from './CustomizationModal';
-import { Plus, Edit, Trash, GripVertical, Upload, ChevronLeft, ChevronRight } from 'lucide-react'
-
+import { Plus, Edit, Trash, GripVertical, Upload, ChevronLeft, ChevronRight, Download, FileCode, Code, Copy, Check, MessageSquare } from 'lucide-react'
+import { Dialog } from '@progress/kendo-react-dialogs';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
 import Image from 'next/image';
+import { EventBus } from './ComponentSelectionPanel';
 
 const FormCanvas: React.FC = () => {
   const {
@@ -22,7 +23,9 @@ const FormCanvas: React.FC = () => {
     addComponent,
     addInlineComponent,
     setComponents,
-    addChatMessage
+    addChatMessage,
+    exportAsJson,
+    exportAsJsx
   } = useFormBuilder();
 
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
@@ -34,6 +37,14 @@ const FormCanvas: React.FC = () => {
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
+  
+  // Export functionality
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'json' | 'jsx'>('json');
+  const [copied, setCopied] = useState(false);
+  const exportButtonRef = useRef<HTMLDivElement>(null);
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   
@@ -64,6 +75,25 @@ const FormCanvas: React.FC = () => {
       window.removeEventListener('resize', checkForOverflow);
     };
   }, [components]);
+
+  // Handle click outside for export dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        exportDropdownRef.current && 
+        !exportDropdownRef.current.contains(event.target as Node) &&
+        exportButtonRef.current &&
+        !exportButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowExportDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   // Handle scroll button clicks
   const handleScroll = (direction: 'left' | 'right') => {
@@ -275,10 +305,51 @@ const FormCanvas: React.FC = () => {
     setTimeout(checkForOverflow, 100);
   };
 
+  // Export functionality handlers
+  const toggleExportDropdown = () => {
+    setShowExportDropdown(!showExportDropdown);
+  };
+
+  const handleExportOptionClick = (format: 'json' | 'jsx') => {
+    setExportFormat(format);
+    setShowExportDropdown(false);
+    setShowExportModal(true);
+  };
+
+  const handleCopyToClipboard = () => {
+    const exportContent = exportFormat === 'json' ? exportAsJson() : exportAsJsx();
+    navigator.clipboard.writeText(exportContent);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const exportContent = exportFormat === 'json' ? exportAsJson() : exportAsJsx();
+    const fileName = exportFormat === 'json' ? 'form-schema.json' : 'form-component.jsx';
+    const blob = new Blob([exportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const getExportContent = () => {
+    return exportFormat === 'json' ? exportAsJson() : exportAsJsx();
+  };
+
+  // Handle opening AI Chat tab
+  const handleOpenAIChat = () => {
+    EventBus.publish('SWITCH_TAB', 'aiChat');
+  };
 
   return (
     <div className="p-5 h-full overflow-y-auto bg-[var(--background)]">
-      <h2 className="text-lg font-semibold mb-6 flex items-center gap-2">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--primary)]">
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M3 9h18" />
@@ -287,34 +358,68 @@ const FormCanvas: React.FC = () => {
         Form Canvas
       </h2>
 
-      {/* Canvas container with improved scrolling */}
+        {/* Export Button */}
+        <div className="relative" ref={exportButtonRef}>
+          <Button
+            onClick={toggleExportDropdown}
+            className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-all px-3 py-2 rounded-md shadow-sm"
+            title="Export Form"
+          >
+            <Download size={16} />
+            <span>Export</span>
+          </Button>
+          
+          {/* Export Dropdown */}
+          {showExportDropdown && (
+            <div 
+              ref={exportDropdownRef}
+              className="absolute right-0 top-full mt-1 w-48 bg-[var(--card)] border border-[var(--border)] shadow-lg rounded-md z-50 py-1 animate-fadeIn"
+            >
+              <button 
+                onClick={() => handleExportOptionClick('jsx')}
+                className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-[var(--secondary)] transition-colors"
+              >
+                <Code size={16} className="text-[var(--primary)]" />
+                <span>Export React Code</span>
+              </button>
+              <button 
+                onClick={() => handleExportOptionClick('json')}
+                className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-[var(--secondary)] transition-colors"
+              >
+                <FileCode size={16} className="text-[var(--primary)]" />
+                <span>Export JSON Schema</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Scroll buttons for horizontal scrolling */}
       <div className="relative">
-        {/* Left scroll indicator */}
         {showLeftScroll && (
-          <button 
+          <button
             onClick={() => handleScroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--card)] shadow-md rounded-r-lg p-2 opacity-80 hover:opacity-100 transition-opacity"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 bg-[var(--card)] border border-[var(--border)] rounded-full p-1 shadow-md hover:bg-[var(--secondary)] transition-colors"
             aria-label="Scroll left"
           >
-            <ChevronLeft size={20} className="text-[var(--primary)]" />
-          </button>
-        )}
-        
-        {/* Right scroll indicator */}
-        {showRightScroll && (
-          <button 
-            onClick={() => handleScroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--card)] shadow-md rounded-l-lg p-2 opacity-80 hover:opacity-100 transition-opacity"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={20} className="text-[var(--primary)]" />
+            <ChevronLeft size={16} />
           </button>
         )}
 
-        <Droppable droppableId="form-canvas" type="COMPONENT_ITEMS" >
-          {(provided, snapshot) => (
-            <div
-              {...provided.droppableProps}
+        {showRightScroll && (
+          <button
+            onClick={() => handleScroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 bg-[var(--card)] border border-[var(--border)] rounded-full p-1 shadow-md hover:bg-[var(--secondary)] transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={16} />
+          </button>
+        )}
+
+      <Droppable droppableId="form-canvas" type="COMPONENT_ITEMS" >
+        {(provided, snapshot) => (
+          <div
+            {...provided.droppableProps}
               ref={(el) => {
                 provided.innerRef(el);
                 canvasRef.current = el;
@@ -327,27 +432,49 @@ const FormCanvas: React.FC = () => {
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'var(--primary-light) var(--secondary)',
               }}
-            >
-              {components.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500 mt-40">
-                  <div className="mb-4">
-                    <Plus size={60} />
-                  </div>
-                  <p>Drag & drop components here or select from the sidebar</p>
+          >
+            {components.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 mt-40">
+                <div className="mb-4">
+                  <Image 
+                    src="/dragDrop.svg" 
+                    alt="Drag & Drop" 
+                    width={120} 
+                    height={120} 
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4 w-full" style={{ minHeight: '100px' }}>
-                  {components.map((row, rowIndex) => (
-                    <Draggable
-                      key={rowIndex}
-                      draggableId={rowIndex.toString()}
-                      index={rowIndex}
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
+                <p className="text-lg mb-2">Drag & drop components here or select from the sidebar</p>
+                <p className="text-center text-sm max-w-md opacity-80 mb-5">
+                  <span className="flex items-center justify-center gap-2 mb-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Have questions? Need a form quickly?
+                  </span>
+                  Try using our AI assistant to build your form in seconds!
+                </p>
+                <Button
+                  onClick={handleOpenAIChat}
+                  className="flex items-center gap-2 px-4 py-2 rounded-md transition-all text-white font-medium shadow-md hover:shadow-lg"
+                  style={{ background: 'linear-gradient(135deg, #3555FF 0%, #8313DB 100%)', border: 'none' }}
+                >
+                  <MessageSquare size={18} />
+                  Build with AI
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4 w-full" style={{ minHeight: '100px' }}>
+                {components.map((row, rowIndex) => (
+                  <Draggable
+                    key={rowIndex}
+                    draggableId={rowIndex.toString()}
+                    index={rowIndex}
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
                           className={`flex flex-row gap-4 items-center justify-center rounded-lg relative group ${
                             snapshot.isDragging ? 'shadow-lg' : ''
                           }`}
@@ -356,142 +483,173 @@ const FormCanvas: React.FC = () => {
                             width: 'max-content',
                             minWidth: '100%'
                           }}
-                        >
-                          <div className="cursor-move p-1 select-none text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors mb-4 -mr-4">
-                            <GripVertical size={16} />
-                          </div>
-                          <div className="flex flex-wrap md:flex-nowrap gap-4 flex-1">
-                            {row.map((component, colIndex) => (
-                              <div
-                                key={component.id}
-                                className={getItemClassName(rowIndex, colIndex)}
-                                style={{
-                                  width: '100%',
-                                  minWidth: '300px',
-                                  maxWidth: row.length > 1 ? '400px' : '100%',
-                                  position: 'relative',
-                                  border: '1px solid var(--border)',
-                                  borderRadius: '12px',
-                                  padding: '16px',
-                                  background: 'var(--card)',
-                                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                                  transition: 'all 0.2s ease',
-                                }}
-                              >
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center gap-3">
-                                    <p className="font-medium text-[var(--foreground)]">{component.componentName}</p>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      onClick={() => setSelectedComponentId(component.id)}
-                                      className="cursor-pointer rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] p-1.5 w-8 h-8 flex items-center justify-center hover:opacity-90 transition-all hover:scale-105"
-                                      aria-label="Edit component"
-                                    >
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="text-[var(--muted-foreground)]"
-                                      >
-                                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                        <path d="m15 5 4 4" />
-                                      </svg>
-                                    </Button>
-
-                                    <Button
-                                      onClick={() => removeComponent(component.id)}
-                                      className="cursor-pointer rounded-full bg-[var(--destructive)] text-[var(--destructive-foreground)] p-1.5 w-8 h-8 flex items-center justify-center hover:opacity-90 transition-all hover:scale-105"
-                                      aria-label="Remove component"
-                                    >
-                                      <Trash size={14} />
-                                    </Button>
-                                  </div>
-                                </div>
-
-                                {/* Bottom Reordering Controls - only show if row has multiple columns */}
-                                {row.length > 1 && (
-                                  <div className="absolute bottom-0 left-0 right-0 flex justify-center -mb-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <div className="flex items-center gap-1 bg-[var(--card)] rounded-full p-1.5 shadow-lg border border-[var(--border)]">
-                                      {/* Left button - only show if not the first column */}
-                                      {colIndex > 0 && (
-                                        <Button
-                                          onClick={() => {
-                                            reorderInlineComponents(rowIndex, colIndex, colIndex - 1);
-                                          }}
-                                          className="cursor-pointer rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] p-1 w-7 h-7 flex items-center justify-center hover:opacity-90 transition-all transform hover:scale-110"
-                                          aria-label="Move left"
-                                          title="Move left"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="m15 18-6-6 6-6" />
-                                          </svg>
-                                        </Button>
-                                      )}
-
-                                      {/* Right button - only show if not the last column */}
-                                      {colIndex < row.length - 1 && (
-                                        <Button
-                                          onClick={() => {
-                                            reorderInlineComponents(rowIndex, colIndex, colIndex + 1);
-                                          }}
-                                          className="cursor-pointer rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] p-1 w-7 h-7 flex items-center justify-center hover:opacity-90 transition-all transform hover:scale-110"
-                                          aria-label="Move right"
-                                          title="Move right"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="m9 18 6-6-6-6" />
-                                          </svg>
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            className="rounded-full cursor-pointer text-white p-2 w-9 h-9 flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm hover:shadow"
-                            onClick={() => openInlineComponentModal(rowIndex)}
-                            aria-label="Add inline component"
-                          >
-                            <Plus size={18} />
-                          </Button>
+                      >
+                        <div className="cursor-move p-1 select-none text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors mb-4 -mr-4">
+                          <GripVertical size={16} />
                         </div>
-                      )}
-                    </Draggable>
-                  ))}
-                </div>
-              )}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-        
-        {/* Scroll hint for new users */}
-        {components.length > 0 && (components.some(row => row.length > 1)) && (
-          <div className="w-full text-center mt-2 text-xs text-[var(--muted-foreground)] opacity-70">
-            <span>Scroll horizontally to see all components in a row</span>
+                          
+                        {row.map((component, colIndex) => (
+                          <div
+                            key={component.id}
+                            className={getItemClassName(rowIndex, colIndex)}
+                            style={{
+                              width: '100%',
+                              minWidth: '300px',
+                                maxWidth: row.length > 1 ? '400px' : '100%',
+                              position: 'relative',
+                              border: '1px solid var(--border)',
+                              borderRadius: '12px',
+                              padding: '16px',
+                              background: 'var(--card)',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                transition: 'all 0.2s ease',
+                            }}
+                          >
+                              <div className="flex flex-col">
+                              <div className="flex items-center gap-3">
+                                <p className="font-medium text-[var(--foreground)]">{component.componentName}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => setSelectedComponentId(component.id)}
+                                  className="cursor-pointer rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] p-1.5 w-8 h-8 flex items-center justify-center hover:opacity-90 transition-all hover:scale-105"
+                                  aria-label="Edit component"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="text-[var(--muted-foreground)]"
+                                  >
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                    <path d="m15 5 4 4" />
+                                  </svg>
+                                </Button>
+
+                                <Button
+                                  onClick={() => removeComponent(component.id)}
+                                    className="cursor-pointer text-[var(--destructive)] border border-[var(--destructive)] bg-transparent w-8 h-8 p-1.5 rounded-full flex items-center justify-center hover:bg-[var(--destructive)] hover:text-white transition-all hover:scale-105"
+                                    aria-label="Delete component"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      className="current-stroke"
+                                    >
+                                      <path d="M3 6h18" />
+                                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                      <line x1="10" y1="11" x2="10" y2="17" />
+                                      <line x1="14" y1="11" x2="14" y2="17" />
+                                    </svg>
+                                </Button>
+                              </div>
+                            </div>
+
+                              <div className="mt-2 py-1 px-3">
+                                <div
+                                  className="border border-dashed border-[var(--border)] rounded-md w-full h-8 flex justify-center items-center text-[var(--muted-foreground)] text-sm opacity-50"
+                                ></div>
+                                <div className="p-2 text-center text-xs">
+                                  <span className="text-[var(--muted-foreground)]">{component.label}</span>
+                                </div>
+                              </div>
+                          </div>
+                        ))}
+
+                          <button
+                          onClick={() => openInlineComponentModal(rowIndex)}
+                            className="h-8 px-2 py-1 border-2 border-dashed border-[var(--muted-foreground)] rounded mb-4 opacity-30 hover:opacity-100 transition-opacity flex items-center gap-1.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--foreground)]"
+                        >
+                            <Plus size={14} />
+                            <span className="text-xs">Add inline</span>
+                          </button>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+              </div>
+            )}
+
+            {provided.placeholder}
+
+              
           </div>
         )}
+      </Droppable>
       </div>
 
       {showInlineModal && (
         <InlineComponentModal
-          onClose={() => {
-            setShowInlineModal(false);
-            setSelectedRowIndex(null);
-          }}
+          onClose={() => setShowInlineModal(false)}
           onSelect={handleInlineComponentSelect}
         />
       )}
-      <CustomizationModal />
+
+      {selectedComponentId && <CustomizationModal />}
+
+      {/* Export Code Modal */}
+      {showExportModal && (
+        <Dialog 
+          title={
+            <div className="flex items-center justify-between w-full pr-5">
+              <div className="flex items-center gap-2">
+                {exportFormat === 'json' ? (
+                  <FileCode size={20} className="text-[var(--primary)]" />
+                ) : (
+                  <Code size={20} className="text-[var(--primary)]" />
+                )}
+                <span className="text-lg font-semibold">
+                  {exportFormat === 'json' ? 'JSON Schema' : 'React Component Code'}
+                </span>
+              </div>
+            </div>
+          }
+          onClose={() => setShowExportModal(false)}
+          width={800}
+          height="90vh"
+          className="k-dialog-lg bg-[var(--background)]"
+        >
+          <div className="p-4 h-full flex flex-col">
+            <div className="mb-4 flex gap-3 justify-end">
+              <Button
+                onClick={handleCopyToClipboard}
+                className="flex items-center gap-2 bg-[var(--secondary)] text-[var(--foreground)] hover:bg-[var(--secondary-hover)] transition-colors px-4 py-2"
+              >
+                {copied ? <Check size={18} className="text-[var(--success)]" /> : <Copy size={18} />}
+                {copied ? "Copied!" : "Copy to Clipboard"}
+              </Button>
+              
+              <Button
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity px-4 py-2"
+              >
+                <Download size={18} />
+                Download
+              </Button>
+            </div>
+            
+            <div className="flex-grow overflow-hidden border border-[var(--border)] rounded-lg">
+              <pre className="p-4 overflow-auto h-full bg-[var(--card)] text-sm font-mono">
+                {getExportContent()}
+              </pre>
+            </div>
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 };

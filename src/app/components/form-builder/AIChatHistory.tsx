@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@progress/kendo-react-buttons';
 import { TextArea } from '@progress/kendo-react-inputs';
 import { useFormBuilder, ChatMessage, FormComponentProps } from './FormBuilderContext';
-import { ChevronUp, ChevronDown, X, MessageSquare, Send, History } from 'lucide-react';
+import { ChevronUp, ChevronDown, X, MessageSquare, Send, History, CheckCircle2 } from 'lucide-react';
 import { Notification, NotificationGroup } from '@progress/kendo-react-notification';
 
 interface AIChatHistoryProps {
@@ -150,29 +150,51 @@ const AIChatHistory: React.FC<AIChatHistoryProps> = ({
                       className={`flex flex-col p-2 rounded-lg ${restoredMessageId === message.id ? 'bg-[var(--primary-light)] bg-opacity-20' : ''}`}
                     >
                       <div className="flex items-start gap-2 mb-1">
-                        <div className="bg-[var(--primary-light)] text-[var(--primary)] p-2 rounded-lg text-sm max-w-[80%]">
+                        <div className="bg-[var(--primary-light)] text-[var(--primary)] p-2 rounded-lg text-sm max-w-[80%] relative">
                           <p>{message.prompt}</p>
                         </div>
-                        
-                        {/* Show restore button for all messages with a form state */}
-                        {canRestore && (
-                          <Button
-                            onClick={() => handleRestoreForm(message.id)}
-                            className="p-1 rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)]"
-                            style={{ 
-                              minWidth: 'unset', 
-                              width: '32px', 
-                              height: '32px',
-                              opacity: isCurrent ? 0.5 : 1 
-                            }}
-                            disabled={isCurrent}
-                            title={isCurrent ? "Current form state" : "Restore this form state"}
-                          >
-                            <History size={16} />
-                          </Button>
-                        )}
                       </div>
-                      <div className="flex justify-between items-center">
+                      
+                      {/* AI Response and Status */}
+                      <div className="flex flex-col">
+                        <div className="bg-[var(--card)] border border-[var(--border)] p-2 rounded-lg text-sm relative">
+                          {message.result ? (
+                            <>
+                              {message.message ? (
+                                <p className="text-[var(--foreground)] text-sm whitespace-pre-line pr-14">{message.message}</p>
+                              ) : (
+                                <p className="text-[var(--foreground)] text-sm pr-14">Form updated successfully.</p>
+                              )}
+                              
+                              {/* Show restore/current version button inside message */}
+                              {canRestore && (
+                                <div className="absolute bottom-2 right-2">
+                                  {isCurrent ? (
+                                    <div className="flex items-center gap-1 text-xs py-1 px-2 bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] rounded-md" title="Current version">
+                                      <CheckCircle2 size={12} />
+                                      <span className="font-medium">Current</span>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      onClick={() => handleRestoreForm(message.id)}
+                                      className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)]"
+                                      style={{ minWidth: 'unset' }}
+                                      title="Restore this form state"
+                                    >
+                                      <History size={12} />
+                                      <span>Restore</span>
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-[var(--destructive)] text-sm">Failed to process your request.</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-1">
                         <div className="text-xs text-[var(--muted-foreground)]">
                           {formatTimestamp(message.timestamp)}
                         </div>
@@ -181,9 +203,6 @@ const AIChatHistory: React.FC<AIChatHistoryProps> = ({
                             <span className="text-[var(--success)]">✓ Form updated</span>
                           ) : (
                             <span className="text-[var(--destructive)]">✗ Failed to process</span>
-                          )}
-                          {isCurrent && (
-                            <span className="ml-2 text-[var(--primary)]">• Current</span>
                           )}
                         </div>
                       </div>

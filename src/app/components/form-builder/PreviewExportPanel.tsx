@@ -10,14 +10,24 @@ import { Notification, NotificationGroup } from '@progress/kendo-react-notificat
 import { Fade } from '@progress/kendo-react-animation';
 import { Dialog } from '@progress/kendo-react-dialogs';
 import { useFormBuilder } from './FormBuilderContext';
-import { Download, Clipboard, Check, Maximize2, Minimize2 } from 'lucide-react';
+import { Download, Clipboard, Check, Maximize2, Minimize2, MessageSquare } from 'lucide-react';
+import AIChatContent from './AIChatContent';
+import { EventBus } from './ComponentSelectionPanel';
 
 const PreviewExportPanel: React.FC = () => {
-  const { components, exportAsJson, exportAsJsx } = useFormBuilder();
+  const { 
+    components, 
+    exportAsJson, 
+    exportAsJsx, 
+    addChatMessage, 
+    setComponents, 
+    getLastAIMessage 
+  } = useFormBuilder();
+  
   const [selected, setSelected] = useState<number>(0);
-  const [exportFormat, setExportFormat] = useState<'json' | 'jsx'>('json');
   const [copied, setCopied] = useState<boolean>(false);
   const [showFullscreenPreview, setShowFullscreenPreview] = useState<boolean>(false);
+  const [isSubmittingPrompt, setIsSubmittingPrompt] = useState<boolean>(false);
   
   // Track form values for all components
   const [formValues, setFormValues] = useState<Record<string, any>>({});
@@ -53,6 +63,22 @@ const PreviewExportPanel: React.FC = () => {
     setFormValues(initialValues);
   }, [components]);
 
+  // Listen for tab switch events
+  useEffect(() => {
+    // Subscribe to tab switch events
+    const unsubscribe = EventBus.subscribe('SWITCH_TAB', (tabName: string) => {
+      if (tabName === 'aiChat') {
+        // AI Chat is now the second tab (index 1)
+        setSelected(1);
+      }
+    });
+    
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   // Update a specific form value
   const updateFormValue = (id: string, value: any) => {
     setFormValues(prev => ({
@@ -66,23 +92,65 @@ const PreviewExportPanel: React.FC = () => {
   };
 
   const handleCopyToClipboard = () => {
-    const exportContent = exportFormat === 'json' ? exportAsJson() : exportAsJsx();
-    navigator.clipboard.writeText(exportContent);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // This function is no longer used in this component
+    // It will be implemented in FormCanvas
   };
 
   const handleDownload = () => {
-    const exportContent = exportFormat === 'json' ? exportAsJson() : exportAsJsx();
-    const blob = new Blob([exportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = exportFormat === 'json' ? 'form-schema.json' : 'form-component.jsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // This function is no longer used in this component
+    // It will be implemented in FormCanvas
+  };
+
+  // Handle AI prompt submission
+  const handleSubmitPrompt = async (prompt: string) => {
+    setIsSubmittingPrompt(true);
+    
+    try {
+      // Get the last AI message to include in the request
+      const lastAIMessage = getLastAIMessage();
+      
+      // Call the API endpoint
+      const response = await fetch('/api/ai-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          prompt, 
+          existingForm: components,
+          lastAIMessage: lastAIMessage // Include the last AI message for context
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Record failure in chat history
+        addChatMessage(prompt, false);
+        return;
+      }
+
+      // Check if the response is in the new format with formStructure and message
+      if (data.formStructure && Array.isArray(data.formStructure)) {
+        // Update the form components with the formStructure from the response
+        setComponents(data.formStructure);
+        
+        // Record success in chat history with the message
+        addChatMessage(prompt, true, data.formStructure, data.message);
+      } else {
+        // Handle legacy format for backward compatibility
+        setComponents(data);
+        
+        // Record success in chat history
+        addChatMessage(prompt, true, data);
+      }
+    } catch (error) {
+      console.error('Error generating form:', error);
+      // Record failure in chat history
+      addChatMessage(prompt, false);
+    } finally {
+      setIsSubmittingPrompt(false);
+    }
   };
 
   // Toggle fullscreen preview
@@ -386,54 +454,27 @@ const PreviewExportPanel: React.FC = () => {
             {renderFormPreview()}
           </div>
         </TabStripTab>
-        
-        <TabStripTab title="Export">
-          <div className="pt-4">
+
+        {/* AI Chat Tab */}
+        <TabStripTab title={
+          <div className="flex items-center gap-2">
+            <MessageSquare size={16} />
+            <span>AI Chat</span>
+          </div>
+        }>
+          <div className="pt-4 h-full min-h-[500px] flex flex-col">
             <h2 className="text-lg text-[var(--primary)] font-semibold mb-6 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--primary)]">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               </svg>
-              Export Form
+              AI Chat Assistant
             </h2>
             
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Export Format
-              </label>
-              <DropDownList
-                data={['json', 'jsx']}
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.value as 'json' | 'jsx')}
-                style={{ width: '100%' }}
-                className="border-[var(--border)] rounded-md"
+            <div className="flex-grow">
+              <AIChatContent 
+                onSubmitPrompt={handleSubmitPrompt}
+                isSubmitting={isSubmittingPrompt}
               />
-            </div>
-            
-            <div className="flex gap-3">
-              <Button
-                onClick={handleCopyToClipboard}
-                className="flex-1 flex items-center justify-center gap-2 bg-[var(--secondary)] text-[var(--foreground)] hover:bg-[var(--secondary-hover)] transition-colors"
-              >
-                {copied ? <Check size={18} className="text-[var(--success)]" /> : <Clipboard size={18} />}
-                {copied ? "Copied!" : "Copy to Clipboard"}
-              </Button>
-              
-              <Button
-                onClick={handleDownload}
-                className="flex-1 flex items-center justify-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity"
-              >
-                <Download size={18} />
-                Download
-              </Button>
-            </div>
-            
-            <div className="mt-6 border border-[var(--border)] rounded-lg p-4 bg-[var(--secondary)] text-[var(--foreground)]">
-              <h3 className="text-sm font-semibold mb-3">Preview</h3>
-              <pre className="text-xs overflow-auto p-3 bg-[var(--background)] border border-[var(--border)] rounded-md max-h-[300px] font-mono">
-                {exportFormat === 'json' ? exportAsJson() : exportAsJsx()}
-              </pre>
             </div>
           </div>
         </TabStripTab>

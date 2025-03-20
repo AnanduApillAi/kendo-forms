@@ -20,6 +20,7 @@ export interface ChatMessage {
   timestamp: Date;
   result?: boolean; // Whether the prompt was successfully processed
   formState?: FormComponentProps[][]; // Snapshot of form state
+  message?: string; // Message from the AI about the form
 }
 
 export interface FormComponentProps {
@@ -52,12 +53,14 @@ interface FormBuilderContextType {
   exportAsJsx: () => string;
   setComponents: (components: FormComponentProps[][]) => void;
   chatHistory: ChatMessage[];
-  addChatMessage: (prompt: string, result: boolean, aiResponseData?: FormComponentProps[][]) => void;
+  addChatMessage: (prompt: string, result: boolean, aiResponseData?: FormComponentProps[][] | null, message?: string) => void;
+  getLastAIMessage: () => string | null;
   clearChatHistory: () => void;
   hasChatHistory: boolean;
-  restoreFormState: (messageId: string) => void; // New function to restore form state
+  restoreFormState: (messageId: string) => void;
 }
 
+// Create context with undefined as default value
 const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined);
 
 export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -319,15 +322,25 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     return jsx;
   };
 
-  const addChatMessage = (prompt: string, result: boolean, aiResponseData?: FormComponentProps[][]) => {
+  const addChatMessage = (prompt: string, result: boolean, aiResponseData?: FormComponentProps[][] | null, message?: string) => {
     const newMessage: ChatMessage = {
       id: uuidv4(),
       prompt,
       timestamp: new Date(),
       result,
       formState: aiResponseData || (result ? [...components] : undefined),
+      message: message || undefined,
     };
     setChatHistory((prev) => [...prev, newMessage]);
+  };
+
+  const getLastAIMessage = (): string | null => {
+    // Get the last message that has a message property
+    const messagesWithAIResponse = chatHistory.filter(msg => msg.message);
+    if (messagesWithAIResponse.length > 0) {
+      return messagesWithAIResponse[messagesWithAIResponse.length - 1].message || null;
+    }
+    return null;
   };
 
   const clearChatHistory = () => {
@@ -343,42 +356,44 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   };
 
+  // Create context value with memoization
+  const contextValue = useMemo(() => ({
+    components,
+    addComponent,
+    addInlineComponent,
+    updateComponent,
+    removeComponent,
+    moveFormItem,
+    addFormItemAtPosition,
+    reorderComponents,
+    reorderInlineComponents,
+    selectedComponentId,
+    setSelectedComponentId,
+    exportAsJson,
+    exportAsJsx,
+    setComponents,
+    chatHistory,
+    addChatMessage,
+    getLastAIMessage,
+    clearChatHistory,
+    hasChatHistory,
+    restoreFormState,
+  }), [components, selectedComponentId, chatHistory]);
+
   return (
-    <FormBuilderContext.Provider
-      value={useMemo(
-        () => ({
-          components,
-          addComponent,
-          addInlineComponent,
-          updateComponent,
-          removeComponent,
-          moveFormItem,
-          addFormItemAtPosition,
-          reorderComponents,
-          reorderInlineComponents,
-          selectedComponentId,
-          setSelectedComponentId,
-          exportAsJson,
-          exportAsJsx,
-          setComponents,
-          chatHistory,
-          addChatMessage,
-          clearChatHistory,
-          hasChatHistory,
-          restoreFormState,
-        }),
-        [components, selectedComponentId, chatHistory]
-      )}
-    >
+    <FormBuilderContext.Provider value={contextValue}>
       {children}
     </FormBuilderContext.Provider>
   );
 };
 
-export const useFormBuilder = (): FormBuilderContextType => {
+// Create a custom hook to use the context
+export const useFormBuilder = () => {
   const context = useContext(FormBuilderContext);
+  
   if (context === undefined) {
     throw new Error('useFormBuilder must be used within a FormBuilderProvider');
   }
+  
   return context;
 }; 

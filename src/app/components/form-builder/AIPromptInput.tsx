@@ -1,99 +1,81 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { TextArea } from '@progress/kendo-react-inputs';
+import React, { useState } from 'react';
 import { Button } from '@progress/kendo-react-buttons';
+import { TextArea } from '@progress/kendo-react-inputs';
 import { Notification } from '@progress/kendo-react-notification';
 import { useFormBuilder } from './FormBuilderContext';
-import { TabStrip, TabStripTab } from '@progress/kendo-react-layout';
-import { Wand, Edit, Plus } from 'lucide-react';
+import { Wand, Edit, Plus, MessageSquare } from 'lucide-react';
 
 interface AIPromptInputProps {
   onClose: () => void;
-  onShowChatHistory?: () => void;
+  onShowChatHistory: () => void;
 }
 
 const AIPromptInput: React.FC<AIPromptInputProps> = ({ onClose, onShowChatHistory }) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { components, setComponents, addChatMessage } = useFormBuilder();
+  const { components, setComponents, addChatMessage, chatHistory } = useFormBuilder();
   const [mode, setMode] = useState<'create' | 'update' | null>(null);
   const [selected, setSelected] = useState(0);
   
   const hasExistingForm = components.length > 0;
-
-  useEffect(() => {
-    // Set default mode based on existing form
-    setMode(hasExistingForm ? null : 'create');
-  }, [hasExistingForm]);
+  
+  const handleClose = () => {
+    onClose();
+  };
+  
+  const handleModeSelect = (selectedMode: 'create' | 'update') => {
+    setMode(selectedMode);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!prompt.trim() || !mode) return;
-
+    if (!prompt.trim() || isLoading) return;
+    
     setIsLoading(true);
     setError(null);
-    let url = '/api/ai-form';
     
     try {
-      // Call the API endpoint with mode parameter
-      const response = await fetch(url, {
+      // Call the API endpoint
+      const response = await fetch('/api/ai-form', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
           prompt, 
-          mode,
+          mode: mode,
           existingForm: mode === 'update' ? components : undefined
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        setError(data.error || 'Failed to generate form');
-        // Add to chat history even if it failed
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to generate form');
         addChatMessage(prompt, false);
         return;
       }
-      // if(JSON.stringify(data)==JSON.stringify(components)){
-      //   addChatMessage(prompt, false);
-      //   return;
-      // }
 
-      // Add successful prompt to chat history with AI response data
-      // This must happen before updating the components to ensure we store the raw AI response
+      const data = await response.json();
+      
+      // Update the form components with the response
+      setComponents(data);
+      
+      // Record success in chat history
       addChatMessage(prompt, true, data);
       
-      // Then update the form components with the response
-      setComponents(data);
-
-      // Show chat history panel if this is the first successful prompt
-      if (onShowChatHistory) {
-        onShowChatHistory();
-      }
-
-      // Close the prompt input
-      handleClose();
+      // Close the prompt dialog
+      onClose();
     } catch (error) {
       console.error('Error generating form:', error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
-      // Add to chat history with failure status
+      setError('An unexpected error occurred');
+      // Record failure in chat history
       addChatMessage(prompt, false);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleClose = () => {
-    onClose();
-  };
-
-  const handleModeSelect = (selectedMode: 'create' | 'update') => {
-    setMode(selectedMode);
   };
 
   return (
@@ -106,25 +88,39 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ onClose, onShowChatHistor
           <Wand size={22} className="text-[var(--primary)]" />
           AI Form Builder
         </h3>
-        <Button
-          onClick={handleClose}
-          className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] bg-transparent border-0"
-          style={{ minWidth: 'unset', padding: '4px' }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-5 h-5"
+        <div className="flex items-center gap-2">
+          {/* Updated Chat History button with tooltip indicating it navigates to the AI Chat tab */}
+          {chatHistory.length > 0 && (
+            <Button
+              onClick={onShowChatHistory}
+              className="flex items-center gap-1 text-[var(--primary)] bg-[var(--primary-light)] p-1.5 px-3 rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors"
+              style={{ minWidth: 'unset', border: 'none' }}
+              title="View chat history in the AI Chat tab"
+            >
+              <MessageSquare size={16} />
+              <span className="text-sm">History</span>
+            </Button>
+          )}
+          <Button
+            onClick={handleClose}
+            className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] bg-transparent border-0"
+            style={{ minWidth: 'unset', padding: '4px' }}
           >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </Button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </Button>
+        </div>
       </div>
 
       {hasExistingForm && mode === null && (
@@ -183,7 +179,7 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ onClose, onShowChatHistor
               </Notification>
             </div>
           )}
-
+          
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <TextArea
@@ -204,7 +200,7 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ onClose, onShowChatHistor
                 disabled={isLoading}
               />
             </div>
-
+            
             <div className="flex justify-between items-center">
               {hasExistingForm && (
                 <Button

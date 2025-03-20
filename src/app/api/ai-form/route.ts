@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   try {
     // Parse the request body
     const body = await request.json();
-    let { prompt, mode, existingForm } = body;
+    const { prompt, existingForm, previousAIMessage } = body;
 
     if (!prompt || prompt.trim() === '') {
       return NextResponse.json(
@@ -63,12 +63,12 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    const aiPrompt = generatePrompt(prompt, existingForm, previousAIMessage);
 
-    // System prompt with available components and format instructions
-    // Define base system prompt with common instructions
-    const baseSystemPrompt = `
-You are a form builder assistant. Your task is to create a form structure based on the user's description.
-Available form components:
+    const systemPrompt = `
+You are a form builder assistant specialized in creating forms with Kendo React components. Your task is to create form structures based on user descriptions and provide brief, relevant feedback.
+
+## Available Form Components
 - textField: For single-line text input
 - email: For email input
 - number: For numeric input
@@ -77,6 +77,7 @@ Available form components:
 - dropdown: For single selection from a dropdown
 - textarea: For multi-line text input
 
+## Component Properties
 Each component has the following properties:
 - id: A unique identifier (use UUID format)
 - type: One of the component types listed above
@@ -88,41 +89,41 @@ Each component has the following properties:
 - required: Boolean indicating if the field is required
 - options: For radio and dropdown, an array of {label, value} objects
 
-Response format:
-You must respond with a valid JSON array of arrays. Each inner array represents a row in the form.
-Each row contains one or more component objects.
-Your response must consist solely of a valid JSON array of arrays as described. Do not include any text, explanations, or clarifying questions outside of this JSON structure. If you are unsure just return a empty array.
+## Response Format
+Your response must include:
+1. A valid JSON array of arrays representing the form structure, Each inner array represents a row in the form. Each row contains one or more component objects.
+2. A brief message with feedback or suggestion to improve the form
 
-Example response structure:
-[
-  [
-    {component1}, {component2}
+Example response:
+{
+  "formStructure": [
+    [
+      {component1},
+      {component2}
+    ],
+    [
+      {component3}
+    ]
   ],
-  [
-    {component3}
-  ]
-]
+  "message": "Form created. Consider adding specific names for the fields to improve data handling."
+}
+
+Keep your feedback concise and directly related to improving the form structure. Do not provide code examples or explanations unless specifically requested.
 `;
 
-    // Create mode system prompt
-    const createSystemPrompt = `${baseSystemPrompt}
-You must create a new form from scratch based on the user's prompt.
-`;
+// Function to process the request with existing form if available
+function generatePrompt(userPrompt: string, existingForm: any, previousAIMessage: string) {
+  let prompt = "";
+  
+  if (existingForm) {
+    prompt += `\n\n## Existing Form\n${JSON.stringify(existingForm)}`;
+  }
+  
+  prompt += `\n\n## User Request\n${userPrompt}`;
+  
+  return prompt;
+}
 
-    // Update mode system prompt
-    const updateSystemPrompt = `${baseSystemPrompt}
-You must update the existing form with new components as per user prompt.
-Follow the existing form structure and add new components as requested.
-Never response with the same form structure and components as the existing form make some changes, if user ask to keep the same form just return the same form then change any of the names or labels.
-Only remove existing components if the user prompt explicitly says to do so.
-`;
-
-    // Select the appropriate system prompt based on mode
-    const systemPrompt = mode === "create" ? createSystemPrompt : updateSystemPrompt;
-
-    if(mode === "update"){
-      prompt = `existing components are ${JSON.stringify(existingForm)} the prompt is ${prompt}`;
-    }
 
     try {
       // Call OpenAI API
@@ -130,7 +131,8 @@ Only remove existing components if the user prompt explicitly says to do so.
         model: "gpt-3.5-turbo-0125",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: prompt }
+          { role: "user", content: aiPrompt },
+          { role: "assistant", content: previousAIMessage? previousAIMessage : "" }
         ],
         temperature: 0.7,
         max_tokens: 1000,
@@ -138,27 +140,36 @@ Only remove existing components if the user prompt explicitly says to do so.
 
       // Parse the response content
       const aiResponse = response.choices[0].message.content;
-      
+      console.log(aiResponse);
       if (!aiResponse) {
         throw new Error('Empty response from AI');
       }
       
       try {
-        const formStructure = JSON.parse(aiResponse);
-        console.log(formStructure);
-        // Validate the structure is an array of arrays
-        if (!Array.isArray(formStructure) || 
-            formStructure.some(row => !Array.isArray(row))) {
+        const responseObj = JSON.parse(aiResponse);
+        
+        // Check if the response has the expected format
+        if (!responseObj.formStructure || !Array.isArray(responseObj.formStructure)) {
           throw new Error('Invalid form structure format');
         }
-        if(formStructure.length === 0){
+        
+        // Validate the structure is an array of arrays
+        if (responseObj.formStructure.some((row: any) => !Array.isArray(row))) {
+          throw new Error('Invalid form structure format');
+        }
+        
+        if (responseObj.formStructure.length === 0) {
           return NextResponse.json(
             { error: 'Failed to generate form with AI. Please try again with a different prompt.' },
             { status: 422 }
           );
         }
         
-        return NextResponse.json(formStructure);
+        // Return both the form structure and the message
+        return NextResponse.json({
+          formStructure: responseObj.formStructure,
+          message: responseObj.message || ''
+        });
       } catch (parseError) {
         return NextResponse.json(
           { error: 'Failed to generate form with AI. Please try again with a different prompt.' },
