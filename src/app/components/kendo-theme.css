@@ -111,6 +111,9 @@
   color: var(--foreground) !important;
 }
 
+.k-notification-content{
+  min-width: 10rem;
+}
 .k-list-container {
   background-color: var(--background) !important;
   color: var(--foreground) !important;

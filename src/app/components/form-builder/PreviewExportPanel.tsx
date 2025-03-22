@@ -426,7 +426,7 @@ const PreviewExportPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-5 h-full overflow-y-auto bg-[var(--card)] border-l border-[var(--border)]">
+    <div className="p-5 h-full bg-[var(--card)] border-l border-[var(--border)]">
       <TabStrip selected={selected} onSelect={handleSelect} className="k-tabstrip-theme w-full">
         <TabStripTab title="Preview">
           <div className="w-full pt-4">
@@ -454,7 +454,6 @@ const PreviewExportPanel: React.FC = () => {
         {/* AI Chat Tab */}
         <TabStripTab title={
           <div className="flex items-center gap-2 ">
-            <MessageSquare size={16} />
             <span>AI Chat</span>
           </div>
         }

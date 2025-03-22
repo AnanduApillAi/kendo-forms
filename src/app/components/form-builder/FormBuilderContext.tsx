@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useMemo, ReactNode, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 // Define types for form components
 export type FormComponentType = 
@@ -67,6 +67,23 @@ export const FormBuilderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [components, setComponents] = useState<FormComponentProps[][]>([]);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+
+  // Check if there's a form to load from localStorage (when coming from collections page)
+  useEffect(() => {
+    const savedForm = localStorage.getItem('editFormState');
+    if (savedForm) {
+      try {
+        const parsedForm = JSON.parse(savedForm);
+        if (Array.isArray(parsedForm)) {
+          setComponents(parsedForm);
+        }
+        // Clear the localStorage after loading
+        localStorage.removeItem('editFormState');
+      } catch (error) {
+        console.error('Error loading saved form:', error);
+      }
+    }
+  }, []);
 
   const addComponent = (component: FormComponentProps) => {
     setComponents((prev) => [...prev, [component]]);

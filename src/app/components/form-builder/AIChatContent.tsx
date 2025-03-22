@@ -234,10 +234,17 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
               fontSize: '14px'
             }}
             disabled={isSubmitting}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmitPrompt(e);
+              }
+            }}
           />
           <Button
             type="submit"
             disabled={!newPrompt.trim() || isSubmitting}
+            
             className={`rounded-full ${!newPrompt.trim() || isSubmitting ? 'bg-[var(--secondary)]' : 'bg-[var(--primary)]'} text-white hover:opacity-90 transition-opacity`}
             style={{ 
               minWidth: 'unset',
