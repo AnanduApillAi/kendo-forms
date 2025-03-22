@@ -59,6 +59,11 @@
   background-color: var(--secondary-hover);
 }
 
+.k-tabstrip-content{
+  padding: 0px;
+  border: none !important;
+  background: none !important;
+}
 .k-dialog-theme .k-dialog-buttongroup .k-button.k-primary {
   color: var(--primary-foreground);
   background-color: var(--primary);

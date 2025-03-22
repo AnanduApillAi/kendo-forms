@@ -158,13 +158,6 @@ function generatePrompt(userPrompt: string, existingForm: any, previousAIMessage
           throw new Error('Invalid form structure format');
         }
         
-        if (responseObj.formStructure.length === 0) {
-          return NextResponse.json(
-            { error: 'Failed to generate form with AI. Please try again with a different prompt.' },
-            { status: 422 }
-          );
-        }
-        
         // Return both the form structure and the message
         return NextResponse.json({
           formStructure: responseObj.formStructure,

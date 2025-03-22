@@ -32,18 +32,18 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
 
   // Enable proper scrolling
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      if (chatContainerRef.current) {
-        chatContainerRef.current.style.maxHeight = 'calc(100vh - 230px)';
+    const updateHeight = () => {
+      if (chatContainerRef.current && chatContainerRef.current.parentElement) {
+        const containerHeight = chatContainerRef.current.parentElement.clientHeight - 74;
+        chatContainerRef.current.style.height = `${containerHeight}px`;
       }
-    });
-
-    if (chatContainerRef.current) {
-      resizeObserver.observe(chatContainerRef.current);
-    }
-
+    };
+    
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    
     return () => {
-      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateHeight);
     };
   }, []);
 
@@ -110,7 +110,7 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
   }, [chatHistory, restoredMessageId]);
 
   return (
-    <div className="flex flex-col h-full border border-[var(--border)] rounded-lg bg-[var(--background)] shadow-sm">
+    <div className="flex flex-col h-[70vh] shadow-sm relative">
       {/* Notification area */}
       {notification && (
         <NotificationGroup style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 999 }}>
@@ -126,10 +126,9 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
       
       {/* Chat History */}
       <div 
-        className="flex-grow p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--primary-light)] scrollbar-track-transparent"
+        className="flex-grow p-4 pb-[74px] overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--primary-light)] scrollbar-track-transparent"
         ref={chatContainerRef}
-        style={{ 
-          maxHeight: 'calc(100vh - 230px)',
+        style={{
           overflowY: 'auto',
           scrollbarWidth: 'thin',
           scrollbarColor: 'var(--primary-light) transparent'
@@ -217,10 +216,10 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
         )}
       </div>
       
-      {/* Input form */}
+      {/* Input form - positioned at the bottom with no gap */}
       <form 
         onSubmit={handleSubmitPrompt} 
-        className="p-3 border-t border-[var(--border)] bg-[var(--card)]"
+        className=" bg-[var(--card)] absolute bottom-0 left-0 right-0 w-full"
       >
         <div className="flex items-end gap-2">
           <TextArea

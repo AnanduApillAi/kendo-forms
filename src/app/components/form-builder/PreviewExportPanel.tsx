@@ -431,13 +431,7 @@ const PreviewExportPanel: React.FC = () => {
         <TabStripTab title="Preview">
           <div className="w-full pt-4">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg text-[var(--primary)] font-semibold flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--primary)]">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                Form Preview
-              </h2>
+              
               {components.length > 0 && (
                 <Button
                   onClick={toggleFullscreenPreview}
@@ -445,8 +439,10 @@ const PreviewExportPanel: React.FC = () => {
                   style={{ border: 'none' }}
                   title="View in fullscreen"
                 >
-                  <Maximize2 size={16} />
-                  <span>Fullscreen</span>
+                  <div className="flex items-center gap-2"> 
+                    <Maximize2 size={16} />
+                    <span>Full screen</span>
+                  </div>
                 </Button>
               )}
             </div>
@@ -457,18 +453,14 @@ const PreviewExportPanel: React.FC = () => {
 
         {/* AI Chat Tab */}
         <TabStripTab title={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ">
             <MessageSquare size={16} />
             <span>AI Chat</span>
           </div>
-        }>
+        }
+        >
           <div className="pt-4 h-full min-h-[500px] flex flex-col">
-            <h2 className="text-lg text-[var(--primary)] font-semibold mb-6 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-[var(--primary)]">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              AI Chat Assistant
-            </h2>
+            
             
             <div className="flex-grow">
               <AIChatContent 
@@ -492,15 +484,7 @@ const PreviewExportPanel: React.FC = () => {
                 </svg>
                 <span className="text-lg font-semibold">Form Preview</span>
               </div>
-              <Button
-                onClick={toggleFullscreenPreview}
-                className="flex items-center gap-1 text-sm text-[var(--primary)] bg-[var(--primary-light)] hover:bg-[var(--primary-light)] hover:text-[var(--primary-dark)] transition-colors px-3 py-1 rounded-md"
-                style={{ border: 'none' }}
-                title="Exit fullscreen"
-              >
-                <Minimize2 size={16} />
-                <span>Exit Fullscreen</span>
-              </Button>
+              
             </div>
           }
           onClose={toggleFullscreenPreview}
