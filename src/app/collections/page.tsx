@@ -9,6 +9,8 @@ import { getAllForms, deleteForm, FormCollection } from '../utils/indexedDB';
 import { ArrowLeft, Trash, Copy, Code, Edit, Eye, Download, Calendar, Clock } from 'lucide-react';
 import { Notification, NotificationGroup } from '@progress/kendo-react-notification';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Label } from '@progress/kendo-react-labels';
+
 
 const CollectionsPage: React.FC = () => {
   const router = useRouter();
@@ -150,32 +152,40 @@ const CollectionsPage: React.FC = () => {
               onClick={() => handleEditForm(form)}
               className="flex items-center justify-center gap-2 bg-[var(--primary)] text-[var(--primary-foreground)] py-2 rounded-md text-sm hover:bg-opacity-90 transition-all shadow-sm hover:shadow"
             >
-              <Edit size={14} />
-              <span>Edit</span>
+              <div className="flex items-center gap-2">
+                <Edit size={14} />
+                <span>Edit</span>
+              </div>
             </Button>
 
             <Button
               onClick={() => handlePreviewClick(form)}
               className="flex items-center justify-center gap-2 bg-[var(--secondary)] text-[var(--foreground)] py-2 rounded-md text-sm hover:bg-[var(--secondary-hover)] transition-all shadow-sm hover:shadow"
             >
-              <Eye size={14} />
-              <span>Preview</span>
+              <div className="flex items-center gap-2">
+                <Eye size={14} />
+                <span>Preview</span>
+              </div>
             </Button>
 
             <Button
               onClick={() => handleCopyCode(form)}
               className="flex items-center justify-center gap-2 bg-[var(--accent-subtle)] text-[var(--accent)] py-2 rounded-md text-sm hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] transition-all shadow-sm hover:shadow"
-            >
-              <Copy size={14} />
-              <span>Copy Code</span>
+            > 
+              <div className="flex items-center gap-2">
+                <Copy size={14} />
+                <span>Copy Code</span>
+              </div>
             </Button>
 
             <Button
               onClick={() => form.id && handleDeleteClick(form.id)}
               className="flex items-center justify-center gap-2 bg-transparent text-[var(--destructive)] border border-[var(--destructive)] border-opacity-30 py-2 rounded-md text-sm hover:bg-[var(--destructive)] hover:text-white hover:border-opacity-100 transition-colors shadow-sm hover:shadow"
             >
-              <Trash size={14} />
-              <span>Delete</span>
+              <div className="flex items-center gap-2">
+                <Trash size={14} />
+                <span>Delete</span>
+              </div>
             </Button>
           </div>
         </div>
@@ -190,9 +200,8 @@ const CollectionsPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 text-[var(--foreground)] hover:text-[var(--primary)] transition-colors">
             <ArrowLeft size={20} />
-            <span className="text-sm font-medium">Back to Builder</span>
           </Link>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] bg-clip-text text-transparent">Form Collections</h1>
+          <h1 className="text-2xl font-bold">Form Collections</h1>
         </div>
         <ThemeToggle />
       </header>
@@ -309,10 +318,10 @@ const CollectionsPage: React.FC = () => {
                   {row.map((component: any) => (
                     <div key={component.id} className="w-full">
                       {component.showLabel !== false && (
-                        <label className="block text-sm font-medium mb-1.5">
+                        <Label className="block text-sm font-medium mb-1.5">
                           {component.label}
                           {component.required && <span className="text-[var(--destructive)] ml-1">*</span>}
-                        </label>
+                        </Label>
                       )}
                       <div 
                         className="border border-[var(--border)] rounded-md p-3.5 text-sm bg-[var(--input)] shadow-sm"
