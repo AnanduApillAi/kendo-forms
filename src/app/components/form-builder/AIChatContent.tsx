@@ -196,8 +196,10 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
                         className="flex items-center gap-0.5 text-xs px-2 py-0.5 rounded-sm bg-transparent text-[var(--muted-foreground)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors"
                         title="Restore this version"
                       >
-                        <History size={10} />
-                        <span className="text-[10px]">Restore</span>
+                        <div className="flex items-center gap-1"> 
+                          <History size={10} />
+                          <span className="text-[10px]">Restore</span>
+                        </div>
                       </Button>
                     )}
                     {canRestore && isCurrent && (

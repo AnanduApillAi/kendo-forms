@@ -181,8 +181,10 @@ const AIChatHistory: React.FC<AIChatHistoryProps> = ({
                                       style={{ minWidth: 'unset' }}
                                       title="Restore this form state"
                                     >
-                                      <History size={12} />
-                                      <span>Restore</span>
+                                      <div className="flex items-center gap-1"> 
+                                        <History size={12} />
+                                        <span>Restore</span>
+                                      </div>
                                     </Button>
                                   )}
                                 </div>

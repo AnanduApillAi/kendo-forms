@@ -9,7 +9,7 @@ import { Checkbox, RadioGroup } from '@progress/kendo-react-inputs';
 import { Notification, NotificationGroup } from '@progress/kendo-react-notification';
 import { Fade } from '@progress/kendo-react-animation';
 import { Dialog } from '@progress/kendo-react-dialogs';
-import { useFormBuilder } from './FormBuilderContext';
+import { useFormBuilder, ChatMessage } from './FormBuilderContext';
 import { Download, Clipboard, Check, Maximize2, Minimize2, MessageSquare } from 'lucide-react';
 import AIChatContent from './AIChatContent';
 import { EventBus } from './ComponentSelectionPanel';
@@ -21,7 +21,8 @@ const PreviewExportPanel: React.FC = () => {
     exportAsJsx, 
     addChatMessage, 
     setComponents, 
-    getLastAIMessage 
+    getLastAIMessage,
+    chatHistory 
   } = useFormBuilder();
   
   const [selected, setSelected] = useState<number>(0);
@@ -109,6 +110,12 @@ const PreviewExportPanel: React.FC = () => {
       // Get the last AI message to include in the request
       const lastAIMessage = getLastAIMessage();
       
+      // Create conversation history array from chat history
+      const conversationHistory = chatHistory.map((msg: ChatMessage) => ({
+        role: msg.result ? 'assistant' : 'user',
+        content: msg.result ? (msg.message || 'Form updated successfully.') : msg.prompt
+      }));
+      
       // Call the API endpoint
       const response = await fetch('/api/ai-form', {
         method: 'POST',
@@ -118,11 +125,9 @@ const PreviewExportPanel: React.FC = () => {
         body: JSON.stringify({ 
           prompt, 
           existingForm: components,
-          lastAIMessage: lastAIMessage // Include the last AI message for context
+          conversationHistory: conversationHistory
         }),
       });
-
-      const data = await response.json();
 
       if (!response.ok) {
         // Record failure in chat history
@@ -130,22 +135,28 @@ const PreviewExportPanel: React.FC = () => {
         return;
       }
 
-      // Check if the response is in the new format with formStructure and message
+      const data = await response.json();
+      console.log('Received response:', data);
+
+      // Check if the response has a valid form structure
       if (data.formStructure && Array.isArray(data.formStructure)) {
-        // Update the form components with the formStructure from the response
-        setComponents(data.formStructure);
+        // Only update components if the formStructure is not empty
+        if (data.formStructure.length > 0) {
+          console.log('Setting components with new form structure:', data.formStructure);
+          setComponents(data.formStructure);
+        } else {
+          console.log('Received empty form structure, keeping existing components');
+        }
         
         // Record success in chat history with the message
-        addChatMessage(prompt, true, data.formStructure, data.message);
+        addChatMessage(prompt, true, data.formStructure.length > 0 ? data.formStructure : components, data.message);
       } else {
-        // Handle legacy format for backward compatibility
-        setComponents(data);
-        
-        // Record success in chat history
-        addChatMessage(prompt, true, data);
+        console.log('Response does not contain a valid form structure');
+        // Record success in chat history but keep the existing form
+        addChatMessage(prompt, true, components, data.message || 'Received response without form structure');
       }
     } catch (error) {
-      console.error('Error generating form:', error);
+      console.error('Error:', error);
       // Record failure in chat history
       addChatMessage(prompt, false);
     } finally {
@@ -426,7 +437,7 @@ const PreviewExportPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-5 h-full bg-[var(--card)] border-l border-[var(--border)]">
+    <div className="p-5 h-full bg-[var(--card)] border-l border-[var(--border)] overflow-y-scroll">
       <TabStrip selected={selected} onSelect={handleSelect} className="k-tabstrip-theme w-full">
         <TabStripTab title="Preview">
           <div className="w-full pt-4">
