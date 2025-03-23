@@ -227,6 +227,7 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
           <TextArea
             placeholder="Type a message..."
             value={newPrompt}
+            autoFocus={true}
             onChange={(e) => setNewPrompt(e.value as string)}
             className="w-full resize-none border border-[var(--border)] rounded-lg focus:border-[var(--primary)] focus:shadow-sm transition-all"
             style={{ 
