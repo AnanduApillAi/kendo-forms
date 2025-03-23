@@ -423,7 +423,7 @@ const FormCanvas: React.FC = () => {
     if (saveToast.visible) {
       const timeout = setTimeout(() => {
         setSaveToast({ visible: false, message: '' });
-      }, 300000);
+      }, 3000);
       
       return () => clearTimeout(timeout);
     }

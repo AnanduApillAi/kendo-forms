@@ -69,10 +69,14 @@ export const saveForm = async (form: FormCollection): Promise<FormCollection> =>
     result = await store.add(formToSave);
   }
 
-  await tx.done;
+  // Wait for transaction to complete
+  await new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve(undefined);
+    tx.onerror = () => reject(tx.error);
+  });
 
   // Return the saved form with its ID
-  return { ...formToSave, id: result };
+  return { ...formToSave, id: result as unknown as number };
 };
 
 // Update an existing form

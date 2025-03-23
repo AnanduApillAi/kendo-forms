@@ -169,9 +169,10 @@
   border-color: var(--border) !important;
 }
 
-.k-notification-success {
-  background-color: var(--success) !important;
-  color: var(--success-foreground) !important;
+.k-notification.k-notification-success {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border-color: #10b981 !important;
 }
 
 .k-notification-info {
