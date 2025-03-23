@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     const aiPrompt = generatePrompt(prompt, existingForm, recentHistory);
 
     const systemPrompt = `
-You are a form builder assistant specialized in creating forms with Kendo React components. Your task is to create form structures based on user descriptions and provide brief, relevant feedback.
+You are a form builder assistant specialized in creating forms with Kendo React components. Your task is to create json object based on user descriptions as per the following rules.
 
 ## Context Awareness
 - You maintain context from the last 5 interactions
@@ -101,46 +101,61 @@ Each component MUST include ALL of these properties:
 
 ## Form creation rules
 - Always maintain 2 components in a row. Only add more components if the user asks for it.
-- You can only  create forms can't do any other tasks like code response or anything else.
+- You can only  create forms can't do any other tasks.
 
 
-## Response Format (STRICT)
-- Your response MUST ALWAYS be a valid JSON object.
-- You should always follow the exact form structure a json object which have a formStructure field and a message field.
-- If no form structure is generated, return an empty "formStructure" array.
-- "message" field must always be present in the response.
-- DO NOT return natural language outside the JSON object.
-
-### Example response:
-\`\`\`json
-{
-  "formStructure": [
-    [
-      {
-        "id": "b450eb41-c72e-4003-b4f8-3e36559868a8",
-        "type": "textField",
-        "label": "Full Name",
-        "componentName": "Text Field",
-        "name": "fullName",
-        "className": "form-control",
-        "placeholder": "Enter your full name",
-        "required": false
-      },
-      {
-        "id": "d25969f4-f143-43f0-8d1a-b9759c5b9567",
-        "type": "email",
-        "label": "Email Address",
-        "componentName": "Email Field",
-        "name": "email",
-        "className": "form-control",
-        "placeholder": "Enter your email",
-        "required": true
-      }
-    ]
-  ],
-  "message": "I've created a form with name and email fields. The email is required for contact purposes."
-}
-\`\`\`
+STRICT RESPONSE FORMAT RULES:
+1. ALL responses MUST be valid JSON objects
+2. DO NOT return natural language outside the JSON object.
+3. If no form structure is generated, return an empty "formStructure" array with a message.
+4. NEVER respond with plain text, markdown, or any other format
+5. ALWAYS use this exact structure for responses:
+   {
+     "formStructure": [
+       [
+         {
+           "id": "b450eb41-c72e-4003-b4f8-3e36559868a8",
+           "type": "textField",
+           "label": "Full Name",
+           "componentName": "Text Field",
+           "name": "fullName",
+           "className": "form-control",
+           "placeholder": "Enter your full name",
+           "required": false
+         },
+         {
+           "id": "d25969f4-f143-43f0-8d1a-b9759c5b9567",
+           "type": "email",
+           "label": "Email Address",
+           "componentName": "Email Field",
+           "name": "email",
+           "className": "form-control",
+           "placeholder": "Enter your email",
+           "required": true
+         }
+       ],
+       [
+         {
+           "id": "d25969f4-f143-43f0-8d1a-b9759c5b9567",
+           "type": "email",
+           "label": "Email Address",
+           "componentName": "Email Field",
+           "name": "email",
+           "className": "form-control",
+           "placeholder": "Enter your email",
+           "required": true
+         }
+       ]
+     ],
+     "message": "I've created a form with name and email fields. The email is required for contact purposes."
+   }
+6. If you cannot respond in this format, respond with an error JSON:
+   {
+     "formStructure": [],
+     "message": "Unable to provide answer"
+   }
+7. The system MUST validate all responses against this schema before sending
+8. NO EXCEPTIONS to these rules are permitted under ANY circumstances
 
 ## Message Guidelines
 - If the user greets you: Respond warmly while maintaining context of any previous form discussions
@@ -149,12 +164,11 @@ Each component MUST include ALL of these properties:
 - Keep responses concise and focused on form building
 - Acknowledge and build upon previous interactions when relevant
 - If you are unable to generate a form, return:
-\`\`\`json
+
 {
   "formStructure": [],
   "message": "I couldn't generate a form based on the input. Please clarify your request."
 }
-\`\`\`
 `;
 
 
@@ -193,7 +207,7 @@ function generatePrompt(userPrompt: string, existingForm: any, conversationHisto
 
       // Call OpenAI API
       const response = await openai.chat.completions.create({
-        model: "gpt-4-0613",
+        model: "gpt-4",
         messages: messages,
         temperature: 0.7,
         max_tokens: 1000,

@@ -55,6 +55,13 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
       await onSubmitPrompt(newPrompt);
       setNewPrompt('');
       // Scroll to bottom after new message
+      // Wait for next render cycle before focusing
+      setTimeout(() => {
+        const inputElement = document.getElementById('ai-chat-input');
+        if (inputElement) {
+          inputElement.focus();
+        }
+      }, 0);
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
@@ -236,6 +243,7 @@ const AIChatContent: React.FC<AIChatContentProps> = ({
               padding: '10px 12px',
               fontSize: '14px'
             }}
+            id="ai-chat-input"
             disabled={isSubmitting}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
