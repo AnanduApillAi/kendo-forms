@@ -100,7 +100,7 @@ Each component MUST include ALL of these properties:
 - options: For radio and dropdown only, an array of {label, value} objects
 
 ## Form creation rules
-- Do not create more than 2 components in a row unless the user asks for it.
+- Always maintain 2 components in a row. Only add more components if the user asks for it.
 - You can only  create forms can't do any other tasks like code response or anything else.
 
 
